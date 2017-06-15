@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.xj.iws.http.dao.PointRoleDao">
+
+    <sql id="field">protocol,type,bit,name,describes,bit01,bit02,bit03,bit04,bit05,bit06,bit07,bit08</sql>
+
+    <resultMap id="PointRoleEntity" type="com.xj.iws.http.entity.PointRoleEntity">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="protocol" property="protocol" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="bit" property="bit" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="describes" property="describes" jdbcType="VARCHAR"/>
+        <result column="bit01" property="bit01" jdbcType="VARCHAR"/>
+        <result column="bit02" property="bit02" jdbcType="VARCHAR"/>
+        <result column="bit03" property="bit03" jdbcType="VARCHAR"/>
+        <result column="bit04" property="bit04" jdbcType="VARCHAR"/>
+        <result column="bit05" property="bit05" jdbcType="VARCHAR"/>
+        <result column="bit06" property="bit06" jdbcType="VARCHAR"/>
+        <result column="bit07" property="bit07" jdbcType="VARCHAR"/>
+        <result column="bit08" property="bit08" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <select id="list" resultType="PointRoleEntity">
+        SELECT id,
+        <include refid="field"/>
+        FROM pointrole ORDER BY protocol
+    </select>
+
+    <select id="getStatus" parameterType="int" resultType="HashMap">
+        SELECT bit01 AS '1',bit02 AS '2',bit03 AS '3',bit04 AS '4',bit05 AS '5',bit06 AS '6',bit07 AS '7',bit08 AS '8'
+        FROM pointrole
+        <where>
+            <if test="_parameter != 0">id = ${_parameter}</if>
+        </where>
+    </select>
+
+</mapper>
