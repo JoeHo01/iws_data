@@ -7,8 +7,11 @@
 
     <sql id="field">deviceid,port,number,time,error,bit,count,data</sql>
 
-    <insert id="add" parameterType="DataEntity">
-        INSERT INTO `${tableName}` (<include refid="field" />) VALUES (${deviceId},'${port}','${number}',now(),'${error}',${bit},${count},'${data}')
+    <insert id="addAll" >
+        INSERT INTO `${tableName}` (<include refid="field" />) VALUES
+        <foreach collection="datas" item="data" separator=",">
+            (${data.deviceId},'${data.port}','${data.number}','${data.strTime}','${data.error}',${data.bit},${data.count},'${data.data}')
+        </foreach>
     </insert>
 
 </mapper>

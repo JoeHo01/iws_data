@@ -47,6 +47,10 @@ public class SerialServer {
         SerialServer.commandMap.remove(port);
     }
 
+    public static void removeThread(String port) {
+        SerialServer.threadMap.remove(port);
+    }
+
     public static Map<String, Timer> getReader() {
         return readerMap;
     }
@@ -104,6 +108,7 @@ public class SerialServer {
 
         //获取命令符
         List<Command> commands = commandMap.get(port);
+        if (commands == null) return;
 
         //若该线程已存在,则终止此线程
         if (null != threadMap.get(port)) {

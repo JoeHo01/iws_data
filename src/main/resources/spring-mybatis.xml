@@ -20,6 +20,7 @@
     <context:component-scan base-package="com.xj.iws.http.service"/>
     <context:component-scan base-package="com.xj.iws.http.dao"/>
     <context:component-scan base-package="com.xj.iws.server"/>
+    <context:component-scan base-package="com.xj.iws.server.data" />
 
     <!-- 引入配置文件 -->
     <bean id="propertyConfigurer"

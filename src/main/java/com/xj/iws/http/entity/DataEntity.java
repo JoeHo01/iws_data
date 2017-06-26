@@ -19,22 +19,21 @@ public class DataEntity {
     private int bit;
     private String data;
 
-    private String tableName;
+    private String strTime;
 
     public DataEntity() {
     }
 
-    public DataEntity(int id, int deviceId, String port, String number, Date time, String error, int count, int bit, String data, String tableName) {
+    public DataEntity(int id, int deviceId, String port, String number, String time, String error, int count, int bit, String data) {
         this.id = id;
         this.deviceId = deviceId;
         this.port = port;
         this.number = number;
-        this.time = time;
+        this.strTime = time;
         this.error = error;
         this.count = count;
         this.bit = bit;
         this.data = data;
-        this.tableName = tableName;
     }
 
     public int getId() {
@@ -109,11 +108,11 @@ public class DataEntity {
         this.data = data;
     }
 
-    public String getTableName() {
-        return tableName;
+    public String getStrTime() {
+        return strTime;
     }
 
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
+    public void setStrTime(String strTime) {
+        this.strTime = strTime;
     }
 }

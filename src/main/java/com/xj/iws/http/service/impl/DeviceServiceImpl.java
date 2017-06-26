@@ -32,17 +32,12 @@ public class DeviceServiceImpl implements DeviceService {
     @Autowired
     RedisBase redisBase;
 
-
     @Override
     public DataWrapper<Void> start(List<String> groupIds) {
         DataWrapper<Void> dataWrapper = new DataWrapper<>();
-        try {
-            String port = deviceDao.getPort(groupIds.get(0));
-            List<Command> commands = deviceDao.getCommands(groupIds.get(0));
-            read(port, commands);
-        } catch (Exception e) {
-
-        }
+        String port = deviceDao.getPort(groupIds.get(0));
+        List<Command> commands = deviceDao.getCommands(groupIds.get(0));
+        read(port, commands);
         return dataWrapper;
     }
 
@@ -54,6 +49,13 @@ public class DeviceServiceImpl implements DeviceService {
         serialServer.closePort(port);
         SerialServer.removeReader(port);
         SerialServer.removeCommand(port);
+
+        Set<String> runningDevices = redisBase.setOps().members("keys_device_running");
+        for (String device : runningDevices) {
+            if (device.indexOf(port) != -1){
+                redisBase.setOps().remove("keys_device_running", device);
+            }
+        }
         return dataWrapper;
     }
 
@@ -165,11 +167,11 @@ public class DeviceServiceImpl implements DeviceService {
                     command.autoCode();
                     break;
             }
-            redisBase.setOps().add("keys_" + dateForm.format(date), dateForm.format(date) + "_" + port + "#" + command.getNumber());
+            redisBase.setOps().add("keys_device_running", port + "#" + command.getNumber());
+            redisBase.setOps().add("keys_device_run", port + "#" + command.getNumber());
         }
 
         String IP = serverDao.getIP();
-
         SerialServer.setCommand(port, commands);
         serialServer.startPort(port);
 

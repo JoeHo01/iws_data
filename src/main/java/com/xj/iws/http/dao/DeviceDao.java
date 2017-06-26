@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by XiaoJiang01 on 2017/3/14.
@@ -24,7 +25,7 @@ public interface DeviceDao {
 
     List<PointFieldEntity> getPointField(int termId);
 
-    int getId(@Param("port") String port,@Param("number") String number);
+    int getId(@Param("port") String port, @Param("number") String number);
 
     List<String> getRunningGroup();
 
@@ -34,11 +35,13 @@ public interface DeviceDao {
 
     int getTermId(int deviceId);
 
-    int exception(@Param("port") String port,@Param("number") String number);
+    int exception(@Param("port") String port, @Param("number") String number);
 
     String getPortByDevice(String deviceId);
 
     int getBit(int deviceId);
 
     int getBitByType(String type);
+
+    Map<String, Integer> getDataInfo(@Param("port") String port, @Param("number") String number);
 }

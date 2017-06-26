@@ -20,9 +20,12 @@ public class SerialThread implements Runnable {
     private Socket socket;//socket客户端连接
     private String port;//端口地址
     private List<Command> commands;//命令类, 存有端口下全部的指令
-    String data;//数据取存变量
+    String data;//数据存取变量
     private boolean read;//读取控制开关
     private boolean open;//线程控制开关
+    private Date readTime;//管理通讯异常时间
+
+    private final long shutdownTime = 10;//发生异常关闭时间,单位 秒
 
     InputStream in = null;
     DataInputStream dis = null;
@@ -36,7 +39,7 @@ public class SerialThread implements Runnable {
         this.port = port;
         this.commands = commands;
         this.redisBase = redisBase;
-
+        this.readTime = null;
     }
 
     @Override
@@ -53,24 +56,33 @@ public class SerialThread implements Runnable {
      * @return
      */
     private boolean connection() {
-        socket = SerialServer.getClient(port);
-        if (socket == null) return false;
+        Socket oldSocket = socket;
+        Socket newSocket = SerialServer.getClient(port);
         try {
-            socket.setSoTimeout(500);
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
-        try {
-            if (dis == null) {
+            if (newSocket == null || newSocket.isClosed()) {
+                if (socket != null) {
+                    socket.close();
+                    socket = null;
+                }
+//                System.out.println(port + " Client is closed");
+                return false;
+            } else if (newSocket.equals(oldSocket)) {
+                return true;
+            } else {
+                socket = newSocket;
+                socket.setSoTimeout(500);
+                socket.setKeepAlive(true);
                 in = socket.getInputStream();
                 dis = new DataInputStream(in);
-            }
-            if (dos == null) {
                 out = socket.getOutputStream();
                 dos = new DataOutputStream(out);
+                return true;
             }
-            return true;
+        } catch (SocketException e) {
+//            e.printStackTrace();
+            return false;
         } catch (IOException e) {
+//            e.printStackTrace();
             return false;
         }
     }
@@ -88,12 +100,13 @@ public class SerialThread implements Runnable {
         //轮询Command
         command:
         for (int i = 0; i < commands.size(); i++) {
+            if (socket == null) break;
             command = commands.get(i);
             code = command.getCode();
             data = new String();
             read = true;
             // 发送
-            if (!sendOrder(socket, code)) break;
+            if (!sendOrder(socket, code)) continue command;
             //若设定时间内取不到值,则跳过此指令
             startTime = System.currentTimeMillis();
             read:
@@ -101,6 +114,8 @@ public class SerialThread implements Runnable {
                 runTime = System.currentTimeMillis();
                 if (runTime - startTime > 500) {
                     System.out.println("读取超时");
+                    //异常处理
+                    readTimeout(new Date(), false);
                     read = false;
                     break;
                 }
@@ -163,10 +178,10 @@ public class SerialThread implements Runnable {
         try {
             dos.write(order);
             dos.flush();
-            System.out.println(socket.getInetAddress() + "#" + socket.getPort() + "  下发:  " + code + checkCode);
+//            System.out.println(socket.getInetAddress() + "#" + socket.getPort() + "  下发:  " + code + checkCode);
             return true;
         } catch (IOException e) {
-//            System.out.println("send error");
+            if (null != socket) System.out.println(socket.getInetAddress() + "#" + socket.getPort() + "下发异常");
             try {
                 Thread.sleep(50);
             } catch (InterruptedException e1) {
@@ -199,38 +214,35 @@ public class SerialThread implements Runnable {
 
             if (flag) {
                 System.out.println(port + "#" + command.getNumber() + " 返回:  " + data);
+                System.out.println(Thread.activeCount());
+
                 setData(command, data);
+                readTimeout(null, true);
                 this.read = false;
             }
             return true;
         } catch (IOException e) {
             System.out.println(socket.getInetAddress() + "#" + socket.getPort() + " 读取异常");
+            readTimeout(new Date(), false);
             return false;
 //            e.printStackTrace();
         }
     }
 
     /**
-     * 关闭读写流
+     * 关闭线程
      */
     public void close() {
-        open = false;
         try {
-            if (dis != null) {
-                dis.close();
-            }
-            if (in != null) {
-                in.close();
-            }
-            if (dos != null) {
-                dos.close();
-            }
-            if (out != null) {
-                out.close();
+            if (socket != null) {
+                socket.close();
+                socket = null;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        open = false;
+        SerialServer.removeThread(port);
     }
 
     /**
@@ -243,7 +255,7 @@ public class SerialThread implements Runnable {
         //type == 1 表示单片机数据(4位1数), 其他类型与单片机相同
         //type == 2 表示电仪表数据(8位1数), 需将前后两数倒置
         //
-        String temp = DataFormat.preData(data,6,4);
+        String temp = DataFormat.preData(data, 6, 4);
         switch (command.getType()) {
             case 1:
                 this.data = temp;
@@ -258,7 +270,6 @@ public class SerialThread implements Runnable {
                     strBuf.append(front + back);
                 }
                 this.data = strBuf.toString();
-                strBuf = null;
                 break;
             default:
                 this.data = temp;
@@ -285,6 +296,32 @@ public class SerialThread implements Runnable {
         }
         if (data.length() == length) {
             redisBase.valueOps().set("temp_" + port + "#" + command.getNumber(), data);
+        }
+    }
+
+    /**
+     * @param date   异常出现时间
+     * @param status true读取正常,刷新时间;false出现异常
+     */
+    private void readTimeout(Date date, boolean status) {
+        //刷新readTime
+        if (status) {
+            readTime = null;
+            return;
+        }
+        //判定超时
+        if (readTime == null) {
+            readTime = date;
+        } else {
+            if ((date.getTime() - readTime.getTime()) / 1000 > shutdownTime) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                socket = null;
+                System.out.println("Shutdown "+port);
+            }
         }
     }
 }

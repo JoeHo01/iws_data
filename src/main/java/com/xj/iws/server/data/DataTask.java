@@ -62,8 +62,6 @@ public class DataTask extends TimerTask {
 
         //获取设备编号
         String number = command.getNumber();
-        //获取参数个数
-        int count = command.getCount();
         //获取设备id
         int deviceId = deviceDao.getId(port, number);
 
@@ -99,14 +97,9 @@ public class DataTask extends TimerTask {
                 alarm.end(alarmIds.get(id));
                 preLight.remove(id);
             }
-//            String tableName = "data_" + IP + ":" + id;
-//
-//            //存储数据
-//            DataEntity dataEntity = new DataEntity(0, deviceId, port, number, null, exception, count, bit, data, tableName);
-//            dataDao.add(dataEntity);
 
             Date date = new Date();
-            redisBase.hashOps().put("data_" + dateForm.format(date) + "_" + id, timeForm.format(date), timeForm.format(date) + ":" + data);
+            redisBase.zSetOps().add("data_" + dateForm.format(date) + "_" + id, timeForm.format(date) + ":" + data + ":" + exception, Long.parseLong(timeForm.format(date)));
             data = null;
         }
     }

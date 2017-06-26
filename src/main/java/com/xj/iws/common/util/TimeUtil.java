@@ -12,14 +12,23 @@ public class TimeUtil {
 
     /**
      * 获取日期
+     * @param date 基准时间
      * @param skewing 偏移量, 0为当前日期
      * @return
      */
-    public static String getDate(int skewing) {
+    public static String getDate(Date date, int skewing) {
         SimpleDateFormat dateForm = new SimpleDateFormat("yyyyMMdd");
         Calendar calendar = new GregorianCalendar();
-        calendar.setTime(new Date());
+        calendar.setTime(date);
         calendar.add(Calendar.DATE, skewing);
+        return dateForm.format(calendar.getTime());
+    }
+
+    public static String getTime(Date date, int skewing){
+        SimpleDateFormat dateForm = new SimpleDateFormat("HHmmss");
+        Calendar calendar = new GregorianCalendar();
+        calendar.setTime(date);
+        calendar.add(Calendar.SECOND, skewing);
         return dateForm.format(calendar.getTime());
     }
 }

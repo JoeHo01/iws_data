@@ -7,4 +7,11 @@
     <typeAliases>
         <package name="com.xj.iws.http.entity"/>
     </typeAliases>
+
+    <!--<plugins>-->
+        <!--<plugin interceptor="com.xj.iws.http.dao.mysql.LoadDataInterceptor">-->
+            <!--<property name="databaseType" value="mysql"/>-->
+        <!--</plugin>-->
+    <!--</plugins>-->
+
 </configuration>

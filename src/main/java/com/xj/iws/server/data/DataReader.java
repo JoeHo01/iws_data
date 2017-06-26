@@ -60,7 +60,7 @@ public class DataReader {
 
     public void read() {
         Timer timer = new Timer();
-        timer.schedule(new DataTask(redisBase,dataDao,deviceDao,IP,port,commands,checkers,alarms), 0, 1 * 1000);
+        timer.scheduleAtFixedRate(new DataTask(redisBase,dataDao,deviceDao,IP,port,commands,checkers,alarms), 0, 1 * 1000);
         SerialServer.setReader(port, timer);
     }
 

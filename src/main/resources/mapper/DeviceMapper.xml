@@ -83,7 +83,9 @@
     </select>
 
     <select id="getPointField" parameterType="int" resultMap="PointFieldEntity">
-        SELECT id,<include refid="pointField" /> FROM pointfield WHERE termid = ${_parameter}
+        SELECT id,
+        <include refid="pointField"/>
+        FROM pointfield WHERE termid = ${_parameter}
     </select>
 
     <select id="getId" resultType="int">
@@ -92,6 +94,14 @@
 
     <select id="getRunningGroup" resultType="String">
         SELECT id FROM devicegroup WHERE status = 1
+    </select>
+
+    <select id="getDataInfo" resultType="HashMap">
+        SELECT d.id AS deviceId, tm.count, tp.bit
+        FROM device d
+        LEFT JOIN deviceterm tm ON d.termid = tm.id
+        LEFT JOIN devicetype tp ON tm.type = tp.id
+        WHERE d.port = '${port}' AND d.number = '${number}'
     </select>
 
 </mapper>

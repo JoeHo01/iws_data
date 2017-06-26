@@ -18,23 +18,12 @@ public class ServerServiceImpl implements ServerService {
     ServerDao serverDao;
     @Autowired
     SerialServer serialServer;
-    @Autowired
-    RedisBase redisBase;
 
     @Override
     public DataWrapper<Void> startServer() {
         DataWrapper<Void> dataWrapper = new DataWrapper<>();
         String ip = serverDao.getIP();
         String port = serverDao.getPort();
-
-        try {
-            redisBase.getConnection().flushAll();
-        }catch (Exception e){
-            System.out.println("Redis 异常!");
-            dataWrapper.setErrorCode(ErrorCodeEnum.Error);
-            return dataWrapper;
-        }
-
         serialServer.setParam(ip,Integer.parseInt(port));
         serialServer.init();
         return dataWrapper;

@@ -7,6 +7,8 @@ import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.stereotype.Component;
 
+import java.io.Serializable;
+
 /**
  * Created by Administrator on 2017/5/25.
  */
@@ -48,7 +50,25 @@ public class RedisBase {
         return redisTemplate.opsForSet();
     }
 
-    public ListOperations listOps(){ return redisTemplate.opsForList(); }
+    public ListOperations listOps(){
+        return redisTemplate.opsForList();
+    }
+
+    public BoundValueOperations bValueOps(String key){
+        return redisTemplate.boundValueOps(key);
+    }
+
+    public BoundHashOperations bHashOps(String key){
+        return redisTemplate.boundHashOps(key);
+    }
+
+    public BoundZSetOperations bZSetOps(String key){
+        return redisTemplate.boundZSetOps(key);
+    }
+
+    public BoundListOperations bListOps(String key){
+        return redisTemplate.boundListOps(key);
+    }
 
     public RedisSerializer serializer(){ return redisTemplate.getStringSerializer(); }
 }
